@@ -19,7 +19,7 @@ arduinoFFT FFT = arduinoFFT(); /* Create FFT object */
 /*
 These values can be changed in order to evaluate the functions
 */
-#define CHANNEL A7
+#define CHANNEL A5
 const uint16_t samples = 128; //This value MUST ALWAYS be a power of 2
 const double samplingFrequency = 2500; //Hz, must be less than 10000 due to ADC
 
@@ -38,16 +38,70 @@ double vImag[samples];
 #define SCL_FREQUENCY 0x02
 #define SCL_PLOT 0x03
 
+int maximumFreq = 0;
+int minimumFreq = 0;
+int bits[4] = {0,0,0,0};
+
 void setup()
 {
   sampling_period_us = round(1000000*(1.0/samplingFrequency));
   Serial.begin(9600);
+  pinMode(7, INPUT_PULLUP);
   while(!Serial);
+
+  callibration();
+  
   Serial.println("Ready");
 }
 
 void loop()
 {
+
+  float x = findDominantFrequency();
+  assignBits(x);
+
+  //
+  
+}
+int state = HIGH;
+int cur_state = HIGH;
+void callibration(){
+  Serial.println("Please sing the lowest note you can comfortably sing and hold it for 10 seconds");
+  delay(500);
+  //state = digitalRead(7);
+  //while (state == HIGH){
+    //state = digitalRead(7);
+  //}
+  Serial.println("Start");
+  for (int i = 0; i < 5; i++){
+    minimumFreq += findDominantFrequency();
+  }
+  minimumFreq = minimumFreq/5;
+
+  Serial.print("Your minimum frequency is ");
+  Serial.println(minimumFreq);
+  
+
+  Serial.println("Please sing the highest note you can comfortably sing and hold it for 10 seconds");
+  delay(500);
+  while (digitalRead(7) == HIGH){
+    
+  }
+  for (int i = 0; i < 5; i++){
+    maximumFreq += findDominantFrequency();
+  }
+  maximumFreq /= 5;
+
+  Serial.print("Your maximum frequency is ");
+  Serial.println(maximumFreq);
+  Serial.println("Callibrated! You may start humming instructions");
+  while (digitalRead(7) == HIGH){
+    
+  }
+   delay(500);
+}
+
+double findDominantFrequency(){
   /*SAMPLING*/
   microseconds = micros();
   for(int i=0; i<samples; i++)
@@ -78,6 +132,28 @@ void loop()
   Serial.println(x, 6); //Print out what frequency is the most dominant.
   //while(1); /* Run Once */
   delay(1000); /* Repeat after delay */
+  return x;
+  
+}
+
+
+void assignBits(double dominantFrequency){
+  //map lowest value to 0 and highest value to F and the chop off the first 4 bits 
+  int pitch = map(dominantFrequency, minimumFreq, maximumFreq, 0,15); //need to to figure out these values
+
+  //convert to bits
+  //int bits[4];
+
+  for (int i = 3; i > -1; i--){
+    if (pitch - pow(2,i) < 0){
+      bits[3-i] = 0;
+    }
+    else{
+      bits[3-i] = 1;
+      pitch = pitch-pow(2,i);
+    }
+  }
+  
 }
 
 void PrintVector(double *vData, uint16_t bufferSize, uint8_t scaleType)
