@@ -59,9 +59,11 @@ void loop()
 
   float x = findDominantFrequency();
   assignBits(x);
-
-  //
   
+  for (int i = 0; i < 4; i++){
+    Serial.print(bits[i]);
+    Serial.println();
+  }
 }
 int state = HIGH;
 int cur_state = HIGH;
@@ -84,9 +86,9 @@ void callibration(){
 
   Serial.println("Please sing the highest note you can comfortably sing and hold it for 10 seconds");
   delay(500);
-  while (digitalRead(7) == HIGH){
+  //while (digitalRead(7) == HIGH){
     
-  }
+  //}
   for (int i = 0; i < 5; i++){
     maximumFreq += findDominantFrequency();
   }
@@ -95,9 +97,9 @@ void callibration(){
   Serial.print("Your maximum frequency is ");
   Serial.println(maximumFreq);
   Serial.println("Callibrated! You may start humming instructions");
-  while (digitalRead(7) == HIGH){
+  //while (digitalRead(7) == HIGH){
     
-  }
+  //}
    delay(500);
 }
 
